@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IntruVision Smart Security System</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, #dceefb, #ffffff); /* Light blue background */
+            color: #1A374D; /* Dark blue text color */
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+.container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header_container {
+            display: flex;
+            align-items: center;
+	    margin-top: 100px;
+	     margin-bottom: 20px;
+            background-color: #1A374D; /* Dark blue for header background */
+            color: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+margin: 0 100px;
+        }
+        .logo img {
+            height: 80px;
+            border-radius: 50%;
+            margin-right: 15px;
+        }
+        .project_title h1 {
+            font-size: 32px;
+            font-family: 'Montserrat', sans-serif;
+margin-left: 20px
+        }
+
+        /* Main Content Section */
+        .main-content {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .container_stream {
+            display: flex;
+            margin-top: 20px;
+            justify-content: space-around;
+        }
+        #video_feed, #get_recent_image {
+            border: 3px solid #000000;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+        #log_title {
+            text-align: center;
+            margin-top: 20px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 2px solid #000000;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f0f4ff; /* Light background for table headers */
+            color: #1A374D; /* Dark blue text color */
+        }
+        .image-container {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+        }
+        /* Style for Recent Image and Live Stream */
+        h2 {
+            color: #1A374D; /* Dark blue for the section headings */
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="header_container">
+        <div class="logo">
+            <img src="{{ url_for('static', filename='logo.jpeg') }}" alt="IntruVision Logo">
+        </div>
+        <div class="project_title">
+            <h1>IntruVision Smart Security System</h1>
+        </div>
+    </div>
+    
+    <div class="container_stream">
+        <div>
+            <h2>Live Video Stream</h2>
+            <img id="video_feed" src="{{ url_for('video_feed') }}" width="854" height="480">
+        </div>
+        <div>
+            <h2>Recent Intruder Image</h2>
+            <img id="get_recent_image" src="{{ url_for('get_recent_image') }}" width="420" height="480">
+        </div>
+    </div>
+    
+    <div id="log_title"><h1>Processed Images of Intruder</h1></div>
+    <table id="intruderLog">
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>Original</th>
+                <th>Median Filtered</th>
+                <th>High Pass Filter</th>
+                <th>Histogram Equalization</th>
+                <th>Edge Detection</th>
+                <th>Sobel Filter</th>
+                <th>Unsharp Masking</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Intruder rows will be dynamically added here -->
+        </tbody>
+    </table>
+
+    <script>
+        async function reloadImages() {
+            try {
+                const response = await fetch('/get_intruder_logs');
+                const data = await response.json();
+                const tbody = document.getElementById('intruderLog').querySelector('tbody');
+                tbody.innerHTML = ''; // Clear previous rows
+                
+                data.forEach(log => {
+                    const row = document.createElement('tr');
+
+                    // Add Timestamp
+                    const timestampCell = document.createElement('td');
+                    timestampCell.innerText = log.timestamp;
+                    row.appendChild(timestampCell);
+
+                    const filters = ['original', 'median', 'highpass', 'histogram', 'edge', 'sobel', 'unsharp'];
+                    
+                    filters.forEach(filter => {
+                        const cell = document.createElement('td');
+                        const img = document.createElement('img');
+                        img.src = log[filter];
+                        img.classList.add('image-container');
+                        cell.appendChild(img);
+                        row.appendChild(cell);
+                    });
+                    
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                console.error("Error fetching logs:", error);
+            }
+
+            const recentImage = document.getElementById('get_recent_image');
+            if (recentImage) {
+                recentImage.src = "{{ url_for('get_recent_image') }}?t=" + new Date().getTime();
+            }
+        }
+
+        setInterval(reloadImages, 5000);
+    </script>
+</body>
+</html>
