@@ -20,6 +20,7 @@ This Flask application streams video from a webcam and performs real-time object
 4. **Before every run:**
    - Delete the `runs` folder (if it exists) from the directory where the project files are located.
    - Delete all folders ending with `_images` in the same directory to avoid browser caching.
+   - In the GITHUB, under branches select DIP_Final files for running the code instead of the main.
 5. Ensure the directory contains only the following files and folders:
    - `app.py`
    - `iptechniques.py`
