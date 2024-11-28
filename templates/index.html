@@ -3,175 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IntruVision: Smart Security System</title>
+    <title>IntruVision Smart Security System</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 0;
-            background: linear-gradient(to bottom, #add8e6, #ffffff); /* Light blue to white gradient */
+            background: linear-gradient(to bottom, #dceefb, #ffffff); /* Light blue background */
+            color: #1A374D; /* Dark blue text color */
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+.container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
         }
 
         .header_container {
             display: flex;
-            align-items: center; /* Center vertically */
-            justify-content: center; /* Center horizontally */
-            background-color: navy; /* Changed background color to navy blue */
-            height: fit-content;
-            padding: 10px; /* Added padding for better spacing */
+            align-items: center;
+	    margin-top: 100px;
+	     margin-bottom: 20px;
+            background-color: #1A374D; /* Dark blue for header background */
+            color: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+margin: 0 100px;
         }
-
-        .logo {
-            margin-right: 10px; /* Add some spacing between logo and title */
-        }
-
         .logo img {
-            height: 50px; /* Adjusted logo size */
+            height: 80px;
+            border-radius: 50%;
+            margin-right: 15px;
+        }
+        .project_title h1 {
+            font-size: 32px;
+            font-family: 'Montserrat', sans-serif;
+margin-left: 20px
         }
 
-        .project_title {
-            font-family: Arial, sans-serif;
-            font-size: 20px; /* Increased font size for better visibility */
-            color: white; /* Changed text color to white for contrast against navy background */
-            text-align: center;
+        /* Main Content Section */
+        .main-content {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
         }
-        
         .container_stream {
             display: flex;
-            justify-content: center; /* Center content horizontally */
             margin-top: 20px;
-            text-align: center;
-            font-size: 15px;
-            gap: 2%;
+            justify-content: space-around;
         }
-
         #video_feed, #get_recent_image {
-            border: 3px solid #000000; /* Black border */
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); /* Updated shadow */
-            width: 420px; /* Equal size for video and recent image */
-            height: 480px;
+            border: 3px solid #000000;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
         }
-
-        .image-container {
-            margin-top: 2px;
-            border: 1px solid #ccc;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            font-size: 15px;
-        }
-
         #log_title {
-            text-align: left;
+            text-align: center;
             margin-top: 20px;
         }
-
         table {
             border-collapse: collapse;
             width: 100%;
+            margin-top: 20px;
         }
-
         th, td {
             border: 2px solid #000000;
             padding: 8px;
             text-align: center;
         }
-
         th {
-            background-color: #f2f2f2;
+            background-color: #f0f4ff; /* Light background for table headers */
+            color: #1A374D; /* Dark blue text color */
+        }
+        .image-container {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+        }
+        /* Style for Recent Image and Live Stream */
+        h2 {
+            color: #1A374D; /* Dark blue for the section headings */
+            text-align: center;
         }
     </style>
 </head>
 <body>
     <div class="header_container">
         <div class="logo">
-            <img src="{{ url_for('get_logo') }}" alt="Your Logo">
+            <img src="{{ url_for('static', filename='logo.jpeg') }}" alt="IntruVision Logo">
         </div>
         <div class="project_title">
-            <h1>IntruVision: Smart Security System</h1>
+            <h1>IntruVision Smart Security System</h1>
         </div>
     </div>
+    
     <div class="container_stream">
         <div>
             <h2>Live Video Stream</h2>
-            <img id="video_feed" src="{{ url_for('video_feed') }}">
+            <img id="video_feed" src="{{ url_for('video_feed') }}" width="854" height="480">
         </div>
         <div>
             <h2>Recent Intruder Image</h2>
-            <img id="get_recent_image" src="{{ url_for('get_recent_image') }}">
+            <img id="get_recent_image" src="{{ url_for('get_recent_image') }}" width="420" height="480">
         </div>
     </div>
+    
     <div id="log_title"><h1>Processed Images of Intruder</h1></div>
     <table id="intruderLog">
         <thead>
             <tr>
-                <th></th>
-                <th>Actual Image</th>
+                <th>Timestamp</th>
+                <th>Original</th>
                 <th>Median Filtered</th>
-                <th>HPF</th>
+                <th>High Pass Filter</th>
                 <th>Histogram Equalization</th>
                 <th>Edge Detection</th>
-                <th>Sobel Filter</th> <!-- Updated column name -->
-                <th>Unsharp Masking</th> <!-- Updated column name -->
+                <th>Sobel Filter</th>
+                <th>Unsharp Masking</th>
             </tr>
         </thead>
         <tbody>
-            <!-- Example row -->
-            <tr>
-                <td><b>1</b></td>
-                <td><img id="image_original" width="120" height="120" class="image-container"></td>
-                <td><img id="image_medianfiltered" width="120" height="120" class="image-container"></td>
-                <td><img id="image_highpass" width="120" height="120" class="image-container"></td>
-                <td><img id="image_histogram" width="120" height="120" class="image-container"></td>
-                <td><img id="image_edgedetection" width="120" height="120" class="image-container"></td>
-                <!-- Added new columns for Sobel and Unsharp Masking -->
-                <td><img id="image_sobel" width="120" height="120" class="image-container"></td> 
-                <td><img id="image_unsharpmask" width="120" height="120" class="image-container"></td> 
-            </tr>
+            <!-- Intruder rows will be dynamically added here -->
         </tbody>
     </table>
 
-    <!-- JavaScript code here -->
     <script>
-        // Function to reload each image every 5 seconds
-        function reloadImages() {
-          var image_original = document.getElementById('image_original');
-          if (image_original) {
-              image_original.src = "{{ url_for('get_original_image') }}";
-          }
+        async function reloadImages() {
+            try {
+                const response = await fetch('/get_intruder_logs');
+                const data = await response.json();
+                const tbody = document.getElementById('intruderLog').querySelector('tbody');
+                tbody.innerHTML = ''; // Clear previous rows
+                
+                data.forEach(log => {
+                    const row = document.createElement('tr');
 
-          var image_medianfiltered = document.getElementById('image_medianfiltered');
-          if (image_medianfiltered) {
-              image_medianfiltered.src = "{{ url_for('get_median_filtered_image') }}";
-          }
+                    // Add Timestamp
+                    const timestampCell = document.createElement('td');
+                    timestampCell.innerText = log.timestamp;
+                    row.appendChild(timestampCell);
 
-          var image_highpass = document.getElementById('image_highpass');
-          if (image_highpass) {
-              image_highpass.src = "{{ url_for('get_highpass_image') }}";
-          }
+                    const filters = ['original', 'median', 'highpass', 'histogram', 'edge', 'sobel', 'unsharp'];
+                    
+                    filters.forEach(filter => {
+                        const cell = document.createElement('td');
+                        const img = document.createElement('img');
+                        img.src = log[filter];
+                        img.classList.add('image-container');
+                        cell.appendChild(img);
+                        row.appendChild(cell);
+                    });
+                    
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                console.error("Error fetching logs:", error);
+            }
 
-          var image_histogram = document.getElementById('image_histogram');
-          if (image_histogram) {
-              image_histogram.src = "{{ url_for('get_histogram_image') }}";
-          }
+            const recentImage = document.getElementById('get_recent_image');
+            if (recentImage) {
+                recentImage.src = "{{ url_for('get_recent_image') }}?t=" + new Date().getTime();
+            }
+        }
 
-          var image_edgedetection = document.getElementById('image_edgedetection');
-          if (image_edgedetection) {
-              image_edgedetection.src = "{{ url_for('get_edgedetection_image') }}";
-          }
-          
-          var image_sobel = document.getElementById('image_sobel');
-          if (image_sobel) {
-              image_sobel.src = "{{ url_for('get_sobel_filtered_image') }}"; // Add appropriate endpoint
-          }
-          
-          var image_unsharpmask = document.getElementById('image_unsharpmask');
-          if (image_unsharpmask) {
-              image_unsharpmask.src = "{{ url_for('get_unsharp_masked_image') }}"; // Add appropriate endpoint
-          }
-      }
-
-      // Set interval to reload each image every 5 seconds
-      setInterval(reloadImages, 5000);
+        setInterval(reloadImages, 5000);
     </script>
 </body>
 </html>

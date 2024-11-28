@@ -1,119 +1,80 @@
-import cv2 as cv
+#Importing necessary libraries
+import cv2
 import numpy as np
-import os
-from datetime import datetime
 
-D0_highpass = 50  # Cut-off frequency for High-Pass Filter
 
-# Apply High-Pass Filter using Ideal Filter (FFT)
-def apply_high_pass_filter(image, D0_highpass):
-    f = np.fft.fft2(image)
-    fshift = np.fft.fftshift(f)
-    rows, cols = image.shape
-    center_row, center_col = rows // 2, cols // 2
-    hpf_mask = np.ones((rows, cols), np.uint8)
-    
-    for i in range(rows):
-        for j in range(cols):
-            dist = np.sqrt((i - center_row)**2 + (j - center_col)**2)
-            if dist <= D0_highpass:
-                hpf_mask[i, j] = 0
+# Function to apply a median filter to reduce noise in the image
+# `kernel_size` determines the size of the filter
+def apply_median_filter(image, kernel_size=5):
+    return cv2.medianBlur(image, kernel_size)
 
-    hpf_filtered = fshift * hpf_mask
-    hpf_inverse_shifted = np.fft.ifftshift(hpf_filtered)
-    restored_image = np.fft.ifft2(hpf_inverse_shifted)
-    return np.abs(restored_image)
+#Function to apply a high-pass filter to enhance edges and details
+# The kernel emphasizes edges by subtracting surrounding pixel values
+def apply_high_pass_filter(image):
+    kernel = np.array([[-1,-1,-1], [-1,9,-1], [-1,-1,-1]])
+    return cv2.filter2D(image, -1, kernel) # Apply kernel using filter2D
 
-# Perform Histogram Equalization
-def histogram_equalization(image):
-    image_yuv = cv.cvtColor(image, cv.COLOR_BGR2YUV)
-    image_yuv[:,:,0] = cv.equalizeHist(image_yuv[:,:,0])  # Equalize the luminance channel
-    equalized_image = cv.cvtColor(image_yuv, cv.COLOR_YUV2BGR)
-    return equalized_image
+# Function to apply histogram equalization to enhance contrast
+# If the image is in color, only the luminance (Y) channel is equalized
+def apply_histogram_equalization(image):
+    if len(image.shape) == 3:
+	# Convert image from BGR to YCrCb color space
+        ycrcb = cv2.cvtColor(image, cv2.COLOR_BGR2YCrCb)
+        channels = cv2.split(ycrcb) # Split into Y, Cr, and Cb channels
+        cv2.equalizeHist(channels[0], channels[0]) # Equalize the Y (luminance) channel
+        cv2.merge(channels, ycrcb) # Merge channels back
+        return cv2.cvtColor(ycrcb, cv2.COLOR_YCrCb2BGR) # Convert back to BGR
+    else: # Grayscale image
+        return cv2.equalizeHist(image)
 
-# Apply Median Filter
-def apply_median_filter(image, filter_size=5):
-    return cv.medianBlur(image, filter_size)
-
-# Apply Sobel Filter for edge detection
-def apply_sobel_filter(image):
-    sobelx = cv.Sobel(image, cv.CV_64F, 1, 0, ksize=3)
-    sobely = cv.Sobel(image, cv.CV_64F, 0, 1, ksize=3)
-    return cv.magnitude(sobelx, sobely)
-
-# Apply Edge Detection (Canny)
+# Function to apply edge detection using the Canny algorithm
+# Detects edges by identifying areas of high intensity gradient
 def apply_edge_detection(image):
-    blur = cv.GaussianBlur(image, (3, 3), 0)
-    ret, threshold = cv.threshold(blur, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
-    lower = 0.5 * ret
-    upper = 1.5 * ret
-    canny = cv.Canny(image, lower, upper)
-    return canny
+    return cv2.Canny(image, 100, 200) # Use thresholds of 100 and 200
 
-# Apply Unsharp Masking
-def apply_unsharp_mask(image, sigma=1.0, strength=1.5):
-    blurred = cv.GaussianBlur(image, (0, 0), sigma)
-    sharpened = cv.addWeighted(image, 1.0 + strength, blurred, -strength, 0)
-    return sharpened
+# Function to apply the Sobel filter for edge detection
+# Computes gradients in the x and y directions and combines them
+def apply_sobel_filter(image):
+    sobelx = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=3) # Gradient in x-direction
+    sobely = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=3) # Gradient in y-direction
+    return cv2.magnitude(sobelx, sobely) # Magnitude of gradients for edge strength
 
-# Save filtered images
-def saveFilteredImg(ImgName, imgObj, filter_type):
-    output_folder = os.path.join("Filtered_Images", filter_type)
-    os.makedirs(output_folder, exist_ok=True)
-    img_output_path = os.path.join(output_folder, ImgName)
-    cv.imwrite(img_output_path, imgObj)
+# Function to apply unsharp masking to sharpen the image
+# Enhances the image by subtracting a blurred version from the original
+def apply_unsharp_masking(image):
+    gaussian = cv2.GaussianBlur(image, (5,5), 0) # Create a blurred version of the image
+    return cv2.addWeighted(image, 1.5, gaussian, -0.5, 0) # Combine original and blurred images
 
-# Process the image and apply various filters
-def process(imagepath):
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    original_image = cv.imread(imagepath)
-    original_image_RGB = cv.cvtColor(original_image, cv.COLOR_BGR2RGB)
-    gray_img = cv.imread(imagepath, cv.IMREAD_GRAYSCALE)
-    
-    assert gray_img is not None, "File could not be read, check with os.path.exists()"
-    
-    D0_highpass = 50  # Cut-off frequency for High-Pass Filter
-    
-    # Apply high-pass filter
-    hpf_filtered_image = apply_high_pass_filter(gray_img, D0_highpass)
-    
-    # Perform histogram equalization
-    histogram_equalized_image = histogram_equalization(original_image)
-    
-    # Perform Median Filter
-    median_filtered_image = apply_median_filter(gray_img, 5)
-    
-    # Apply Edge Detection (Canny)
-    edge_detected_image = apply_edge_detection(gray_img)
-    
-    # Apply Sobel Filter
-    sobel_filtered_image = apply_sobel_filter(gray_img)
-    
-    # Apply Unsharp Masking
-    unsharp_masked_image = apply_unsharp_mask(original_image)
-    
-    # Create output directories
-    filter_folders = ["original_images", "median_filtered_images", "highpass_images", 
-                      "histogram_images", "edge_detected_images", "sobel_images", "unsharp_images"]
-    
-    for folder in filter_folders:
-        if not os.path.exists(folder):
-            os.makedirs(folder)
+# Function to apply a specified filter to an image based on the filter type
+def apply_filter(image_path, filter_type):
+    # Read the image from the provided file path
+    image = cv2.imread(image_path)
+    if image is None: # Check if the image was loaded successfully
+        return None
 
-    # Save images to corresponding folders
-    original_image_path = os.path.join("original_images", f'Original_image_{timestamp}.jpg')
-    cv.imwrite(original_image_path, original_image)
-    
-    # Save filtered images
-    saveFilteredImg(f'median_filtered_image_{timestamp}.jpg', median_filtered_image, 'Median_Filtered')
-    saveFilteredImg(f'hpf_filtered_image_{timestamp}.jpg', hpf_filtered_image, 'HPF')
-    saveFilteredImg(f'histogram_equalized_image_{timestamp}.jpg', histogram_equalized_image, 'Histogram_Equalized')
-    saveFilteredImg(f'edge_detected_image_{timestamp}.jpg', edge_detected_image, 'Edge_Detected')
-    saveFilteredImg(f'sobel_filtered_image_{timestamp}.jpg', sobel_filtered_image, 'Sobel_Filtered')
-    saveFilteredImg(f'unsharp_masked_image_{timestamp}.jpg', unsharp_masked_image, 'Unsharp_Masked')
-    
-    # Print the output paths
-    print(f"Filtered images have been saved to respective folders.")
-    
-if __name__ == "__main__":
-    process(r"C:\path\to\your\image.jpg")  # Replace with the path to your image
+    # Apply the selected filter based on the filter_type argument    
+    if filter_type == 'median':
+        return apply_median_filter(image)
+    elif filter_type == 'highpass':
+        return apply_high_pass_filter(image)
+    elif filter_type == 'histogram':
+        return apply_histogram_equalization(image)
+    elif filter_type == 'edge':
+        return apply_edge_detection(image)
+    elif filter_type == 'sobel':
+        return apply_sobel_filter(image)
+    elif filter_type == 'unsharp':
+        return apply_unsharp_masking(image)
+    else:
+        return image # Return the original image if no filter type matches
+
+# Function to process an image by applying all filters and saving the results
+def process(image_path):
+    # Apply all filters and save the results
+    filters = ['median', 'highpass', 'histogram', 'edge', 'sobel', 'unsharp']
+    for filter_type in filters:
+	# Apply each filter to the image
+        processed_image = apply_filter(image_path, filter_type)
+        if processed_image is not None: # Check if the filter was applied successfully
+	    # Save the processed image with a corresponding filter name
+            cv2.imwrite(f'processed_images/{filter_type}_filtered.jpg', processed_image)
