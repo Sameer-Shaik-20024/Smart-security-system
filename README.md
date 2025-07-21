@@ -1,4 +1,4 @@
-# Smart security system
+# Smart Security System
 
 This Flask application streams video from a webcam and performs real-time object detection using the YOLO model from Ultralytics. It also captures images of intruders at regular intervals and applies various image processing techniques.
 
