@@ -21,13 +21,13 @@ This Flask application streams video from a webcam and performs real-time object
    - Delete the `runs` folder (if it exists) from the directory where the project files are located.
    - Delete all folders ending with `_images` in the same directory to avoid browser caching.
 5. Ensure the directory contains only the following files and folders:
-   - `App.py`
-   - `Diptechniques.py`
-   - `Best (3).pt`
-   - `Requirements.txt`
+   - `app.py`
+   - `diptechniques.py`
+   - `best (3).pt`
+   - `requirements.txt`
    - `Readme.md`
-   - `Templates` (folder)
-   - `Logo` (folder)
+   - `templates` (folder)
+   - `logo` (folder)
 
 ---
 
